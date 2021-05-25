@@ -1,15 +1,12 @@
+using GreenPipes;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using OrderMicroService.Consumers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace OrderMicroService
 {
@@ -24,6 +21,25 @@ namespace OrderMicroService
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMassTransit(x =>
+            {
+                x.AddConsumer<TicketConsumer>();
+                x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
+                {
+                    cfg.UseHealthCheck(provider);
+                    cfg.Host(new Uri("rabbitmq://localhost"), h =>
+                    {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+                    cfg.ReceiveEndpoint("ticketQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<TicketConsumer>(provider);
+                    });
+                }));
+            });
+            services.AddMassTransitHostedService();
             services.AddControllers();
         }
 

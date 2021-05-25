@@ -16,14 +16,13 @@ namespace TicketMicroService.Controllers
         {
             _bus = bus;
         }
-
         [HttpPost]
         public async Task<IActionResult> CreateTicket(Ticket ticket)
         {
-            if(ticket != null)
+            if (ticket != null)
             {
                 ticket.BookedOn = DateTime.Now;
-                Uri uri = new Uri("rabbitmq://localhost/ticketQueue");
+                Uri uri = new Uri("rabbitmq://localhost/ticketQueue?bind=true&queue=ticketQueue");
                 var endPoint = await _bus.GetSendEndpoint(uri);
                 await endPoint.Send(ticket);
                 return Ok();
