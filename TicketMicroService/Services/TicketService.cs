@@ -40,9 +40,10 @@ namespace TicketMicroService.Services
             await _repository.SaveAsync();
             var entityDto = _mapper.Map<TicketForReadDTO>(entity);
 
-            Uri uri = new Uri("rabbitmq://localhost/ticketQueueCreate?bind=true&queue=ticketQueueCreate");
+            Uri uri = new Uri("rabbitmq://localhost/ticketQueueCreate?bind=true&queue=ticketQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(entity);
+            objBus.Type = TypeOpetation.Create;
             await endPoint.Send(objBus);
 
             return new MessageDetailsForCreateDTO { StatusCode = 201, Ticket = entityDto };
@@ -54,9 +55,10 @@ namespace TicketMicroService.Services
             if(ticket == null)
                 return new MessageDetailsDTO { StatusCode = 404, Message = $"Ticket with id: {id} doesn't exist in the database" };
 
-            Uri uri = new Uri("rabbitmq://localhost/ticketQueueCreate?bind=true&queue=ticketQueueDelete");
+            Uri uri = new Uri("rabbitmq://localhost/ticketQueueCreate?bind=true&queue=ticketQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(ticket);
+            objBus.Type = TypeOpetation.Delete;
             await endPoint.Send(objBus);
 
             _repository.DeleteTicket(ticket);
@@ -101,6 +103,7 @@ namespace TicketMicroService.Services
             Uri uri = new Uri("rabbitmq://localhost/ticketQueueCreate?bind=true&queue=ticketQueueEdit");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(ticket);
+            objBus.Type = TypeOpetation.Create;
             await endPoint.Send(objBus);
 
             return new MessageDetailsDTO { StatusCode = 204 };
