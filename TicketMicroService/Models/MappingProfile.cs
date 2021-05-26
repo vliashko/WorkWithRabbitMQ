@@ -12,6 +12,8 @@ namespace TicketMicroService.Models
             CreateMap<TicketForCreateDTO, Ticket>();
             CreateMap<TicketForUpdateDTO, Ticket>().ReverseMap();
 
+            CreateMap<Place, PlaceForUpdateDTO>().ReverseMap();
+
             CreateMap<Place, PlaceShared>();
             CreateMap<Ticket, TicketShared>().ForMember(x => x.Places, c => c.MapFrom(x => x.Places));
         }

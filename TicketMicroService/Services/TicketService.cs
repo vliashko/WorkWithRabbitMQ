@@ -33,7 +33,7 @@ namespace TicketMicroService.Services
             var isSitesSame = IsSitesSame(entity.Places);
             if (isSitesSame)
                 return new MessageDetailsForCreateDTO { StatusCode = 406, Ticket = null };
-            var canBeCreated = await _repository.IsPlacesFree(entity.DateTime, entity.Places);
+            var canBeCreated = await _repository.IsPlacesFree(entity.DateTime, entity.Places, 0);
             if (!canBeCreated)
                 return new MessageDetailsForCreateDTO { StatusCode = 400, Ticket = null };
             _repository.CreateTicket(entity);
@@ -89,7 +89,10 @@ namespace TicketMicroService.Services
             var ticket = await _repository.GetTicketAsync(id, true);
             if (ticket == null)
                 return new MessageDetailsDTO { StatusCode = 404, Message = $"Ticket with id: {id} doesn't exist in the database" };
-            var isPlacesFree = await _repository.IsPlacesFree(ticketForUpdateDTO.DateTime, ticketForUpdateDTO.Places);
+            var isSitesSame = IsSitesSame(_mapper.Map<IEnumerable<Place>>(ticketForUpdateDTO.Places));
+            if (isSitesSame)
+                return new MessageDetailsDTO { StatusCode = 400, Message = "Identical places selected." };
+            var isPlacesFree = await _repository.IsPlacesFree(ticket.DateTime, _mapper.Map<IEnumerable<Place>>(ticketForUpdateDTO.Places), ticket.Id);
             if (!isPlacesFree)
                 return new MessageDetailsDTO { StatusCode = 400, Message = $"Ticket cannot be change. These seats have already been purchased / booked."};
             _mapper.Map(ticketForUpdateDTO, ticket);

@@ -52,10 +52,10 @@ namespace TicketMicroService.Repositories
                 .CountAsync();
         }
 
-        public async Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places)
+        public async Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places, int ticketId)
         {
             var tickets = await FindByCondition(ticket =>
-                ticket.DateTime == dateTime, false)
+                ticket.DateTime == dateTime && ticket.Id != ticketId, false)
                 .Include(ticket => ticket.Places)
                 .ToListAsync();
             if (tickets.SelectMany(ticket =>
