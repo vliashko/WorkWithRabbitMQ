@@ -13,6 +13,7 @@ namespace SharedModels
 
     public enum TypeOpetation
     {
+        NoValue,
         Create,
         Edit,
         Delete
