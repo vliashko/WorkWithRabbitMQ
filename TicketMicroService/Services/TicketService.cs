@@ -114,9 +114,9 @@ namespace TicketMicroService.Services
                         count++;
                 }
                 if (count > 1)
-                    return false;
+                    return true;
             }
-            return true;
+            return false;
         }
     }
 }
