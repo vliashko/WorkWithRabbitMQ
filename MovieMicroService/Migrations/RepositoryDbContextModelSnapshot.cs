@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TicketMicroService.Models;
+using MovieMicroService.Models;
 
-namespace TicketMicroService.Migrations
+namespace MovieMicroService.Migrations
 {
     [DbContext(typeof(RepositoryDbContext))]
     partial class RepositoryDbContextModelSnapshot : ModelSnapshot
@@ -19,7 +19,7 @@ namespace TicketMicroService.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("TicketMicroService.Models.Movie", b =>
+            modelBuilder.Entity("MovieMicroService.Models.Movie", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -32,6 +32,15 @@ namespace TicketMicroService.Migrations
                     b.Property<int>("CountSites")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndMovie")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("StartMovie")
                         .HasColumnType("datetime2");
 
@@ -40,12 +49,18 @@ namespace TicketMicroService.Migrations
                     b.ToTable("Movies");
                 });
 
-            modelBuilder.Entity("TicketMicroService.Models.Place", b =>
+            modelBuilder.Entity("MovieMicroService.Models.Place", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<bool>("IsBusy")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Row")
                         .HasColumnType("int");
@@ -53,42 +68,18 @@ namespace TicketMicroService.Migrations
                     b.Property<int>("Site")
                         .HasColumnType("int");
 
-                    b.Property<int>("TicketId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("MovieId");
 
                     b.ToTable("Places");
                 });
 
-            modelBuilder.Entity("TicketMicroService.Models.Ticket", b =>
+            modelBuilder.Entity("MovieMicroService.Models.Place", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsFooled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Telephone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("TicketMicroService.Models.Place", b =>
-                {
-                    b.HasOne("TicketMicroService.Models.Ticket", null)
+                    b.HasOne("MovieMicroService.Models.Movie", null)
                         .WithMany("Places")
-                        .HasForeignKey("TicketId")
+                        .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

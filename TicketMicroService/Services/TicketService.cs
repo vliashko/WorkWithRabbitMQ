@@ -10,22 +10,40 @@ using TicketMicroService.Models.DataTransferObjects;
 
 namespace TicketMicroService.Services
 {
-    public class TicketService : ITicketService
+    public class TicketService : ITicketService, IConsumer<MovieShared>
     {
         private readonly ITicketRepository _repository;
+        private readonly IMovieRepository _movieRepository;
         private readonly IBus _bus;
         private readonly IMapper _mapper;
 
-        public TicketService(ITicketRepository repository, IBus bus, IMapper mapper)
+        public TicketService(ITicketRepository repository, IMovieRepository movieRepository, IBus bus, IMapper mapper)
         {
             _repository = repository;
+            _movieRepository = movieRepository;
             _bus = bus;
             _mapper = mapper;
+        }
+
+        public async Task Consume(ConsumeContext<MovieShared> context)
+        {
+            var data = context.Message;
+            if(data.Type == TypeOperation.Create)
+            {
+                _movieRepository.AddMovie(_mapper.Map<Movie>(data));
+                await _movieRepository.SaveAsync();
+            }
         }
 
         public async Task<MessageDetailsForCreateDTO> CreateTicketAsync(TicketForCreateDTO ticketForCreateDTO)
         {
             var entity = _mapper.Map<Ticket>(ticketForCreateDTO);
+            var isPlacesCorrect = await _movieRepository.IsPlacesCorrect(entity.DateTime, entity.Places);
+            if (!isPlacesCorrect)
+                return new MessageDetailsForCreateDTO { StatusCode = 406, Ticket = null };
+            var isTimeCorrect = await _movieRepository.IsDateTimeCorrect(entity.DateTime);
+            if(!isTimeCorrect)
+                return new MessageDetailsForCreateDTO { StatusCode = 406, Ticket = null };
             var ticketForThisTel =
                 await _repository.IsTelephoneHasAlreadyTicketForThisTime(ticketForCreateDTO.Telephone, ticketForCreateDTO.DateTime);
             if (ticketForThisTel != null)
@@ -40,10 +58,10 @@ namespace TicketMicroService.Services
             await _repository.SaveAsync();
             var entityDto = _mapper.Map<TicketForReadDTO>(entity);
 
-            Uri uri = new Uri("rabbitmq://localhost/ticketQueu?bind=true&queue=ticketQueue");
+            Uri uri = new Uri("rabbitmq://localhost/ticketQueue?bind=true&queue=ticketQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(entity);
-            objBus.Type = TypeOpetation.Create;
+            objBus.Type = TypeOperation.Create;
             await endPoint.Send(objBus);
 
             return new MessageDetailsForCreateDTO { StatusCode = 201, Ticket = entityDto };
@@ -58,7 +76,7 @@ namespace TicketMicroService.Services
             Uri uri = new Uri("rabbitmq://localhost/ticketQueue?bind=true&queue=ticketQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(ticket);
-            objBus.Type = TypeOpetation.Delete;
+            objBus.Type = TypeOperation.Delete;
             await endPoint.Send(objBus);
 
             _repository.DeleteTicket(ticket);
@@ -103,7 +121,7 @@ namespace TicketMicroService.Services
             Uri uri = new Uri("rabbitmq://localhost/ticketQueue?bind=true&queue=ticketQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<TicketShared>(ticket);
-            objBus.Type = TypeOpetation.Edit;
+            objBus.Type = TypeOperation.Edit;
             await endPoint.Send(objBus);
 
             return new MessageDetailsDTO { StatusCode = 204 };

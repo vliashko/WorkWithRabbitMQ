@@ -10,7 +10,7 @@ using TicketMicroService.Models;
 namespace TicketMicroService.Migrations
 {
     [DbContext(typeof(RepositoryDbContext))]
-    [Migration("20210526135604_Initial")]
+    [Migration("20210527092732_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,27 @@ namespace TicketMicroService.Migrations
                 .HasAnnotation("ProductVersion", "3.1.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("TicketMicroService.Models.Movie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("CountRows")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CountSites")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartMovie")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Movies");
+                });
 
             modelBuilder.Entity("TicketMicroService.Models.Place", b =>
                 {
@@ -53,6 +74,9 @@ namespace TicketMicroService.Migrations
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFooled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Telephone")
                         .HasColumnType("nvarchar(max)");

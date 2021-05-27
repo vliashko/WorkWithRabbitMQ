@@ -9,6 +9,7 @@ namespace TicketMicroService.Models
         public string Telephone { get; set; }
         public DateTime DateTime { get; set; }
         public IEnumerable<Place> Places { get; set; }
+        public bool IsFooled { get; set; }
 
         public Ticket()
         {

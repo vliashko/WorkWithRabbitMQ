@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace TicketMicroService.Models
+namespace MovieMicroService.Models
 {
     public class RepositoryDbContext : DbContext
     {
@@ -8,8 +8,7 @@ namespace TicketMicroService.Models
         {
         }
 
-        public DbSet<Ticket> Tickets { get; set; }
-        public DbSet<Place> Places { get; set; }
         public DbSet<Movie> Movies { get; set; }
+        public DbSet<Place> Places { get; set; }
     }
 }

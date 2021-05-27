@@ -1,3 +1,4 @@
+using GreenPipes;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,7 @@ namespace TicketMicroService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<ITicketRepository, TicketRepository>();
+            services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<ITicketService, TicketService>();
 
             services.AddDbContext<RepositoryDbContext>(options =>
@@ -34,6 +36,7 @@ namespace TicketMicroService
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<TicketService>();
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(config =>
                 {
                     config.UseHealthCheck(provider);
@@ -41,6 +44,11 @@ namespace TicketMicroService
                     {
                         h.Username("guest");
                         h.Password("guest");
+                    });
+                    config.ReceiveEndpoint("movieQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<TicketService>(provider);
                     });
                 }));
             });

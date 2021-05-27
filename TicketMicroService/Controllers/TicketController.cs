@@ -26,7 +26,7 @@ namespace TicketMicroService.Controllers
             var count = await _service.GetTicketsCountAsync(searchModel);
             PageViewModel pageViewModel = new PageViewModel(count, pageIndex, pageSize);
             ViewModel<TicketForReadDTO> viewModel = new ViewModel<TicketForReadDTO> { PageViewModel = pageViewModel, Objects = tickets };
-            return Ok(viewModel);
+            return Ok(viewModel);   
         }
 
         [HttpGet("{id}")]
@@ -47,7 +47,7 @@ namespace TicketMicroService.Controllers
             if(ticketResult.StatusCode == 400 && ticketResult.Ticket == null)
                 return StatusCode(ticketResult.StatusCode, "These seats have already been purchased / booked.");
             if (ticketResult.StatusCode == 406)
-                return StatusCode(ticketResult.StatusCode, "Identical places selected.");
+                return StatusCode(ticketResult.StatusCode, "Exception with time of movie or with places.");
             return StatusCode(ticketResult.StatusCode, ticketResult.Ticket);
         }
 
