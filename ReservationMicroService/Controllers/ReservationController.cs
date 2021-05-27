@@ -58,6 +58,13 @@ namespace ReservationMicroService.Controllers
             return StatusCode(result.StatusCode, result.Message);
         }
 
+        [HttpDelete("time/{dateTime}")]
+        public async Task<IActionResult> DeleteAllUnboughtReservationsForMovie(DateTime dateTime)
+        {
+            var result = await _service.DeleteAllUnboughtReservationsForMovie(dateTime);
+            return StatusCode(result.StatusCode, result.Message);
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateReservation(int id, ReservationForUpdateDTO ReservationDto)
         {

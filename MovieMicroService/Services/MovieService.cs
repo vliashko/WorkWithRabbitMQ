@@ -38,8 +38,20 @@ namespace MovieMicroService.Services
                             place.IsBusy = true;
                     }
                 }
-                await _repository.SaveAsync();
             }
+            else if (data.Type == TypeOperation.Delete)
+            {
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                foreach (var place in movie.Places)
+                {
+                    foreach (var item in data.Places)
+                    {
+                        if (item.Row == place.Row && item.Site == place.Site)
+                            place.IsBusy = false;
+                    }
+                }
+            }
+            await _repository.SaveAsync();
         }
 
         public async Task<MessageDetailsForCreateDTO> CreateMovieAsync(MovieForCreateDTO movieForCreateDTO)

@@ -142,13 +142,20 @@ namespace ReservationMicroService.Services
             var isPlacesFree = await _repository.IsPlacesFree(Reservation.DateTime, _mapper.Map<IEnumerable<Place>>(ReservationForUpdateDTO.Places), Reservation.Id);
             if (!isPlacesFree)
                 return new MessageDetailsDTO { StatusCode = 400, Message = $"Reservation cannot be change. These seats have already been purchased / booked." };
-            _mapper.Map(ReservationForUpdateDTO, Reservation);
-            await _repository.SaveAsync();
 
             Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<ReservationShared>(Reservation);
-            objBus.Type = TypeOperation.Edit;
+            objBus.Type = TypeOperation.Delete;
+            await endPoint.Send(objBus);
+
+            _mapper.Map(ReservationForUpdateDTO, Reservation);
+            await _repository.SaveAsync();
+
+            uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<ReservationShared>(Reservation);
+            objBus.Type = TypeOperation.Create;
             await endPoint.Send(objBus);
 
             return new MessageDetailsDTO { StatusCode = 204 };

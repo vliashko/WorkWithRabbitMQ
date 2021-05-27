@@ -40,6 +40,7 @@ namespace ReservationMicroService.Repositories
         public async Task<IEnumerable<Reservation>> GetAllUnboughtReservationsForMovie(DateTime dateTime)
         {
             return await FindByCondition(Reservation => Reservation.DateTime == dateTime && Reservation.IsFooled == false, false)
+                .Include(x => x.Places)
                 .ToListAsync();
         }
 
