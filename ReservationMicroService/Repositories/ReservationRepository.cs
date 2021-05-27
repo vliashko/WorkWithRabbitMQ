@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
+using ReservationMicroService.Models.DataTransferObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ReservationMicroService.Contracts;
-using ReservationMicroService.Models;
-using ReservationMicroService.Models.DataTransferObjects;
 
 namespace ReservationMicroService.Repositories
 {

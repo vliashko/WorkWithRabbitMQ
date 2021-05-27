@@ -1,4 +1,5 @@
-﻿namespace ReservationMicroService.Models.DataTransferObjects
+﻿
+namespace ReservationMicroService.Models.DataTransferObjects
 {
     public class MessageDetailsForCreateDTO
     {

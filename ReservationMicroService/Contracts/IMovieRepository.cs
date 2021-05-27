@@ -1,7 +1,7 @@
-﻿using System;
+﻿using ReservationMicroService.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ReservationMicroService.Models;
 
 namespace ReservationMicroService.Contracts
 {

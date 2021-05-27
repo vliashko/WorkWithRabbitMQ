@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using ReservationMicroService.Contracts;
-using ReservationMicroService.Models;
 
 namespace ReservationMicroService.Repositories
 {

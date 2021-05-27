@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using MassTransit;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
+using ReservationMicroService.Models.DataTransferObjects;
 using SharedModels;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ReservationMicroService.Contracts;
-using ReservationMicroService.Models;
-using ReservationMicroService.Models.DataTransferObjects;
 
 namespace ReservationMicroService.Services
 {
@@ -28,7 +28,7 @@ namespace ReservationMicroService.Services
         public async Task Consume(ConsumeContext<MovieShared> context)
         {
             var data = context.Message;
-            if(data.Type == TypeOperation.Create)
+            if (data.Type == TypeOperation.Create)
             {
                 _movieRepository.AddMovie(_mapper.Map<Movie>(data));
                 await _movieRepository.SaveAsync();
@@ -38,10 +38,10 @@ namespace ReservationMicroService.Services
         public async Task Consume(ConsumeContext<OrderToReservation> context)
         {
             var data = context.Message;
-            var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true); 
+            var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true);
             if (data.Type == TypeOperation.Create)
                 Reservation.IsFooled = true;
-            else if(data.Type == TypeOperation.Delete)
+            else if (data.Type == TypeOperation.Delete)
                 Reservation.IsFooled = false;
             await _repository.SaveAsync();
         }
@@ -53,7 +53,7 @@ namespace ReservationMicroService.Services
             if (!isPlacesCorrect)
                 return new MessageDetailsForCreateDTO { StatusCode = 406, Reservation = null };
             var isTimeCorrect = await _movieRepository.IsDateTimeCorrect(entity.DateTime);
-            if(!isTimeCorrect)
+            if (!isTimeCorrect)
                 return new MessageDetailsForCreateDTO { StatusCode = 406, Reservation = null };
             var ReservationForThisTel =
                 await _repository.IsTelephoneHasAlreadyReservationForThisTime(ReservationForCreateDTO.Telephone, ReservationForCreateDTO.DateTime);
@@ -97,7 +97,7 @@ namespace ReservationMicroService.Services
         public async Task<MessageDetailsDTO> DeleteReservationAsync(int id)
         {
             var Reservation = await _repository.GetReservationAsync(id, false);
-            if(Reservation == null)
+            if (Reservation == null)
                 return new MessageDetailsDTO { StatusCode = 404, Message = $"Reservation with id: {id} doesn't exist in the database" };
 
             Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
@@ -141,7 +141,7 @@ namespace ReservationMicroService.Services
                 return new MessageDetailsDTO { StatusCode = 400, Message = "Identical places selected." };
             var isPlacesFree = await _repository.IsPlacesFree(Reservation.DateTime, _mapper.Map<IEnumerable<Place>>(ReservationForUpdateDTO.Places), Reservation.Id);
             if (!isPlacesFree)
-                return new MessageDetailsDTO { StatusCode = 400, Message = $"Reservation cannot be change. These seats have already been purchased / booked."};
+                return new MessageDetailsDTO { StatusCode = 400, Message = $"Reservation cannot be change. These seats have already been purchased / booked." };
             _mapper.Map(ReservationForUpdateDTO, Reservation);
             await _repository.SaveAsync();
 

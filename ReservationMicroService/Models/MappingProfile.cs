@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using SharedModels;
 using ReservationMicroService.Models.DataTransferObjects;
+using SharedModels;
 
 namespace ReservationMicroService.Models
 {

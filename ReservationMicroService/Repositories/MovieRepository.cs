@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ReservationMicroService.Contracts;
-using ReservationMicroService.Models;
 
 namespace ReservationMicroService.Repositories
 {

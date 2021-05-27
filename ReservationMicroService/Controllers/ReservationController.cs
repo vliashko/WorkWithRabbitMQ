@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 using ReservationMicroService.Contracts;
 using ReservationMicroService.Models.DataTransferObjects;
 using ReservationMicroService.Models.Pagination;
+using System;
+using System.Threading.Tasks;
 
 namespace ReservationMicroService.Controllers
 {
@@ -26,7 +26,7 @@ namespace ReservationMicroService.Controllers
             var count = await _service.GetReservationsCountAsync(searchModel);
             PageViewModel pageViewModel = new PageViewModel(count, pageIndex, pageSize);
             ViewModel<ReservationForReadDTO> viewModel = new ViewModel<ReservationForReadDTO> { PageViewModel = pageViewModel, Objects = Reservations };
-            return Ok(viewModel);   
+            return Ok(viewModel);
         }
 
         [HttpGet("{id}")]
@@ -44,7 +44,7 @@ namespace ReservationMicroService.Controllers
             if (ReservationDto == null)
                 return BadRequest();
             var ReservationResult = await _service.CreateReservationAsync(ReservationDto);
-            if(ReservationResult.StatusCode == 400 && ReservationResult.Reservation == null)
+            if (ReservationResult.StatusCode == 400 && ReservationResult.Reservation == null)
                 return StatusCode(ReservationResult.StatusCode, "These seats have already been purchased / booked.");
             if (ReservationResult.StatusCode == 406)
                 return StatusCode(ReservationResult.StatusCode, "Exception with time of movie or with places.");

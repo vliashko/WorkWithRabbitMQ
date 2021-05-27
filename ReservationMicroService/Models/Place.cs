@@ -1,4 +1,5 @@
-﻿namespace ReservationMicroService.Models
+﻿
+namespace ReservationMicroService.Models
 {
     public class Place
     {
