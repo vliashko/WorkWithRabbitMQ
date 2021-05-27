@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ReservationMicroService.Models.DataTransferObjects
+namespace OrderMicroService.Models.DataTransferObjects
 {
-    public class ReservationModelForSearchDTO
+    public class OrderModelForSearchDTO
     {
         public string Telephone { get; set; }
         public DateTime DateTime { get; set; }

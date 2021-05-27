@@ -7,12 +7,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using TicketMicroService.Contracts;
-using TicketMicroService.Models;
-using TicketMicroService.Repositories;
-using TicketMicroService.Services;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
+using ReservationMicroService.Repositories;
+using ReservationMicroService.Services;
 
-namespace TicketMicroService
+namespace ReservationMicroService
 {
     public class Startup
     {
@@ -25,9 +25,9 @@ namespace TicketMicroService
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<ITicketRepository, TicketRepository>();
+            services.AddScoped<IReservationRepository, ReservationRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
-            services.AddScoped<ITicketService, TicketService>();
+            services.AddScoped<IReservationService, ReservationService>();
 
             services.AddDbContext<RepositoryDbContext>(options =>
                             options.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
@@ -36,7 +36,7 @@ namespace TicketMicroService
 
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<TicketService>();
+                x.AddConsumer<ReservationService>();
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(config =>
                 {
                     config.UseHealthCheck(provider);
@@ -48,7 +48,12 @@ namespace TicketMicroService
                     config.ReceiveEndpoint("movieQueue", ep =>
                     {
                         ep.UseMessageRetry(r => r.Interval(100, 100));
-                        ep.ConfigureConsumer<TicketService>(provider);
+                        ep.ConfigureConsumer<ReservationService>(provider);
+                    });
+                    config.ReceiveEndpoint("orderQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<ReservationService>(provider);
                     });
                 }));
             });

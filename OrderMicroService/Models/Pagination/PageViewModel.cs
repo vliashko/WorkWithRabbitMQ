@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ReservationMicroService.Models.Pagination
+namespace OrderMicroService.Models.Pagination
 {
     public class PageViewModel
     {

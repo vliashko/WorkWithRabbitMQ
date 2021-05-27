@@ -1,8 +1,8 @@
-﻿namespace TicketMicroService.Models.DataTransferObjects
+﻿namespace ReservationMicroService.Models.DataTransferObjects
 {
     public class MessageDetailsForCreateDTO
     {
         public int StatusCode { get; set; }
-        public TicketForReadDTO Ticket { get; set; }
+        public ReservationForReadDTO Reservation { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TicketMicroService.Models
+namespace ReservationMicroService.Models
 {
     public class Movie
     {

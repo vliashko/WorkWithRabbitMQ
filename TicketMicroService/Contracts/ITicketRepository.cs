@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TicketMicroService.Models;
-using TicketMicroService.Models.DataTransferObjects;
+using ReservationMicroService.Models;
+using ReservationMicroService.Models.DataTransferObjects;
 
-namespace TicketMicroService.Contracts
+namespace ReservationMicroService.Contracts
 {
-    public interface ITicketRepository
+    public interface IReservationRepository
     {
-        Task<IEnumerable<Ticket>> GetAllTicketsPaginationAsync(int pageIndex, int pageSize, TicketModelForSearchDTO searchModel, bool trackChanges);
-        Task<int> GetTicketsCountAsync(TicketModelForSearchDTO searchModel, bool trackChanges);
-        Task<Ticket> GetTicketAsync(int ticketId, bool trackChanges);
-        Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places, int ticketId);
-        Task<Ticket> IsTelephoneHasAlreadyTicketForThisTime(string telephone, DateTime dateTime);
-        void CreateTicket(Ticket ticket);
-        void DeleteTicket(Ticket ticket);
+        Task<IEnumerable<Reservation>> GetAllReservationsPaginationAsync(int pageIndex, int pageSize, ReservationModelForSearchDTO searchModel, bool trackChanges);
+        Task<IEnumerable<Reservation>> GetAllUnboughtReservationsForMovie(DateTime dateTime);
+        Task<int> GetReservationsCountAsync(ReservationModelForSearchDTO searchModel, bool trackChanges);
+        Task<Reservation> GetReservationAsync(int ReservationId, bool trackChanges);
+        Task<Reservation> GetReservationByDateTimeAndTel(DateTime dateTime, string telephone, bool trackChanges);
+        Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places, int ReservationId);
+        Task<Reservation> IsTelephoneHasAlreadyReservationForThisTime(string telephone, DateTime dateTime);
+        void CreateReservation(Reservation Reservation);
+        void DeleteReservation(Reservation Reservation);
         Task SaveAsync();
     }
 }

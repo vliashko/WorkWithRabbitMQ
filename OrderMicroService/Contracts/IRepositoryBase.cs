@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace ReservationMicroService.Contracts
+namespace OrderMicroService.Contracts
 {
     public interface IRepositoryBase<T>
     {

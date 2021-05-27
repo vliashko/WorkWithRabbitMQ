@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TicketMicroService.Models
+namespace ReservationMicroService.Models
 {
-    public class Ticket
+    public class Reservation
     {
         public int Id { get; set; }
         public string Telephone { get; set; }
@@ -11,7 +11,7 @@ namespace TicketMicroService.Models
         public IEnumerable<Place> Places { get; set; }
         public bool IsFooled { get; set; }
 
-        public Ticket()
+        public Reservation()
         {
             Places = new List<Place>();
         }

@@ -1,9 +1,10 @@
 ﻿using System;
 
-namespace ReservationMicroService.Models.DataTransferObjects
+namespace SharedModels
 {
-    public class ReservationModelForSearchDTO
+    public class OrderToReservation
     {
+        public TypeOperation Type { get; set; }
         public string Telephone { get; set; }
         public DateTime DateTime { get; set; }
     }

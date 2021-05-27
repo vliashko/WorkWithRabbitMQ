@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace ReservationMicroService.Models
+namespace OrderMicroService.Models
 {
     public class RepositoryDbContext : DbContext
     {
@@ -8,8 +8,6 @@ namespace ReservationMicroService.Models
         {
         }
 
-        public DbSet<Reservation> Reservations { get; set; }
-        public DbSet<Place> Places { get; set; }
-        public DbSet<Movie> Movies { get; set; }
+        public DbSet<Order> Orders { get; set; }
     }
 }

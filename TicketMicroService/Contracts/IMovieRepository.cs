@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TicketMicroService.Models;
+using ReservationMicroService.Models;
 
-namespace TicketMicroService.Contracts
+namespace ReservationMicroService.Contracts
 {
     public interface IMovieRepository
     {

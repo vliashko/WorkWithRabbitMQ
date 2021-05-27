@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SharedModels
 {
-    public class TicketShared
+    public class ReservationShared
     {
         public TypeOperation Type { get; set; }
         public string Telephone { get; set; }

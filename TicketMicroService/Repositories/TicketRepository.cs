@@ -3,63 +3,76 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TicketMicroService.Contracts;
-using TicketMicroService.Models;
-using TicketMicroService.Models.DataTransferObjects;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
+using ReservationMicroService.Models.DataTransferObjects;
 
-namespace TicketMicroService.Repositories
+namespace ReservationMicroService.Repositories
 {
-    public class TicketRepository : RepositoryBase<Ticket>, ITicketRepository
+    public class ReservationRepository : RepositoryBase<Reservation>, IReservationRepository
     {
-        public TicketRepository(RepositoryDbContext context) : base(context)
+        public ReservationRepository(RepositoryDbContext context) : base(context)
         {
         }
 
-        public void CreateTicket(Ticket ticket)
+        public void CreateReservation(Reservation Reservation)
         {
-            Create(ticket);
+            Create(Reservation);
         }
 
-        public void DeleteTicket(Ticket ticket)
+        public void DeleteReservation(Reservation Reservation)
         {
-            Delete(ticket);
+            Delete(Reservation);
         }
 
-        public async Task<IEnumerable<Ticket>> GetAllTicketsPaginationAsync(int pageIndex, int pageSize,
-            TicketModelForSearchDTO searchModel, bool trackChanges)
+        public async Task<IEnumerable<Reservation>> GetAllReservationsPaginationAsync(int pageIndex, int pageSize,
+            ReservationModelForSearchDTO searchModel, bool trackChanges)
         {
-            return await FindByCondition(ticket =>
-                (string.IsNullOrWhiteSpace(searchModel.Telephone) || ticket.Telephone.Contains(searchModel.Telephone)) &&
-                (searchModel.DateTime == new DateTime() || searchModel.DateTime == ticket.DateTime), trackChanges)
+            return await FindByCondition(Reservation =>
+                (string.IsNullOrWhiteSpace(searchModel.Telephone) || Reservation.Telephone.Contains(searchModel.Telephone)) &&
+                (searchModel.DateTime == new DateTime() || searchModel.DateTime == Reservation.DateTime), trackChanges)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
-                .Include(ticket => ticket.Places)
+                .Include(Reservation => Reservation.Places)
                 .ToListAsync();
         }
 
-        public async Task<Ticket> GetTicketAsync(int ticketId, bool trackChanges)
+        public async Task<IEnumerable<Reservation>> GetAllUnboughtReservationsForMovie(DateTime dateTime)
         {
-            return await FindByCondition(ticket => ticket.Id == ticketId, trackChanges)
-                .Include(ticket => ticket.Places)
+            return await FindByCondition(Reservation => Reservation.DateTime == dateTime && Reservation.IsFooled == false, false)
+                .ToListAsync();
+        }
+
+        public async Task<Reservation> GetReservationAsync(int ReservationId, bool trackChanges)
+        {
+            return await FindByCondition(Reservation => Reservation.Id == ReservationId, trackChanges)
+                .Include(Reservation => Reservation.Places)
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<int> GetTicketsCountAsync(TicketModelForSearchDTO searchModel, bool trackChanges)
+        public async Task<Reservation> GetReservationByDateTimeAndTel(DateTime dateTime, string telephone, bool trackChanges)
         {
-            return await FindByCondition(ticket =>
-                (string.IsNullOrWhiteSpace(searchModel.Telephone) || ticket.Telephone.Contains(searchModel.Telephone)) &&
-                (searchModel.DateTime == new DateTime() || searchModel.DateTime == ticket.DateTime), trackChanges)
+            return await FindByCondition(Reservation => Reservation.DateTime == dateTime && Reservation.Telephone == telephone, trackChanges)
+                .Include(Reservation => Reservation.Places)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<int> GetReservationsCountAsync(ReservationModelForSearchDTO searchModel, bool trackChanges)
+        {
+            return await FindByCondition(Reservation =>
+                (string.IsNullOrWhiteSpace(searchModel.Telephone) || Reservation.Telephone.Contains(searchModel.Telephone)) &&
+                (searchModel.DateTime == new DateTime() || searchModel.DateTime == Reservation.DateTime), trackChanges)
                 .CountAsync();
         }
 
-        public async Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places, int ticketId)
+        public async Task<bool> IsPlacesFree(DateTime dateTime, IEnumerable<Place> places, int ReservationId)
         {
-            var tickets = await FindByCondition(ticket =>
-                ticket.DateTime == dateTime && ticket.Id != ticketId, false)
-                .Include(ticket => ticket.Places)
+            var Reservations = await FindByCondition(Reservation =>
+                Reservation.DateTime == dateTime && Reservation.Id != ReservationId, false)
+                .Include(Reservation => Reservation.Places)
                 .ToListAsync();
-            if (tickets.SelectMany(ticket =>
-                            ticket.Places.SelectMany(place => places
+            if (Reservations.SelectMany(Reservation =>
+                            Reservation.Places.SelectMany(place => places
                                 .Where(aplace => aplace.Row == place.Row && aplace.Site == place.Site)
                                 .Select(aplace => new { }))).Any())
                 return false;
@@ -67,7 +80,7 @@ namespace TicketMicroService.Repositories
             return true;
         }
 
-        public async Task<Ticket> IsTelephoneHasAlreadyTicketForThisTime(string telephone, DateTime dateTime)
+        public async Task<Reservation> IsTelephoneHasAlreadyReservationForThisTime(string telephone, DateTime dateTime)
         {
             var res = await FindByCondition(t => t.Telephone == telephone && t.DateTime == dateTime, false)
                 .Include(x => x.Places)

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MovieMicroService.Services
 {
-    public class MovieService : IMovieService, IConsumer<TicketShared>
+    public class MovieService : IMovieService, IConsumer<ReservationShared>
     {
         private readonly IMovieRepository _repository;
         private readonly IBus _bus;
@@ -24,7 +24,7 @@ namespace MovieMicroService.Services
             _mapper = mapper;
         }
 
-        public async Task Consume(ConsumeContext<TicketShared> context)
+        public async Task Consume(ConsumeContext<ReservationShared> context)
         {
             var data = context.Message;
             if(data.Type == TypeOperation.Create)
@@ -111,12 +111,6 @@ namespace MovieMicroService.Services
                 }
             }
             await _repository.SaveAsync();
-
-            Uri uri = new Uri("rabbitmq://localhost/movieQueue?bind=true&queue=movieQueue");
-            var endPoint = await _bus.GetSendEndpoint(uri);
-            var objBus = _mapper.Map<MovieShared>(movie);
-            objBus.Type = TypeOperation.Edit;
-            await endPoint.Send(objBus);
 
             return new MessageDetailsDTO { StatusCode = 204 };
         }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace TicketMicroService.Models.DataTransferObjects
+namespace ReservationMicroService.Models.DataTransferObjects
 {
-    public class TicketForUpdateDTO
+    public class ReservationForUpdateDTO
     {
         public IEnumerable<Place> Places { get; set; }
         public bool IsFooled { get; set; }

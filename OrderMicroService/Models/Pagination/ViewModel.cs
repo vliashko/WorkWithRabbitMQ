@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ReservationMicroService.Models.Pagination
+namespace OrderMicroService.Models.Pagination
 {
     public class ViewModel<T>
     {

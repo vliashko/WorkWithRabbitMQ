@@ -2,10 +2,14 @@ using GreenPipes;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OrderMicroService.Consumers;
+using OrderMicroService.Contracts;
+using OrderMicroService.Models;
+using OrderMicroService.Repositories;
+using OrderMicroService.Services;
 using System;
 
 namespace OrderMicroService
@@ -21,26 +25,28 @@ namespace OrderMicroService
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderService, OrderService>();
+
+            services.AddDbContext<RepositoryDbContext>(options =>
+                            options.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
+
+            services.AddAutoMapper(typeof(MappingProfile));
+
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<TicketConsumer>();
-                x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
+                x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(config =>
                 {
-                    cfg.UseHealthCheck(provider);
-                    cfg.Host(new Uri("rabbitmq://localhost"), h =>
+                    config.UseHealthCheck(provider);
+                    config.Host(new Uri("rabbitmq://localhost"), h =>
                     {
                         h.Username("guest");
                         h.Password("guest");
                     });
-                    cfg.ReceiveEndpoint("ticketQueue", ep =>
-                    {
-                        ep.UseMessageRetry(r => r.Interval(100, 100));
-                        ep.ConfigureConsumer<TicketConsumer>(provider);
-                    });
                 }));
             });
             services.AddMassTransitHostedService();
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

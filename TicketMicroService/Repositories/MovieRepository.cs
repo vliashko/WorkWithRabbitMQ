@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TicketMicroService.Contracts;
-using TicketMicroService.Models;
+using ReservationMicroService.Contracts;
+using ReservationMicroService.Models;
 
-namespace TicketMicroService.Repositories
+namespace ReservationMicroService.Repositories
 {
     public class MovieRepository : RepositoryBase<Movie>, IMovieRepository
     {

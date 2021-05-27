@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TicketMicroService.Models.DataTransferObjects
+namespace ReservationMicroService.Models.DataTransferObjects
 {
-    public class TicketForReadDTO
+    public class ReservationForReadDTO
     {
         public int Id { get; set; }
         public string Telephone { get; set; }

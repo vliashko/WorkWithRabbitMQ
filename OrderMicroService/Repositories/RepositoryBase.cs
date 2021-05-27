@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrderMicroService.Contracts;
+using OrderMicroService.Models;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using ReservationMicroService.Contracts;
-using ReservationMicroService.Models;
 
-namespace ReservationMicroService.Repositories
+namespace OrderMicroService.Repositories
 {
     public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {
