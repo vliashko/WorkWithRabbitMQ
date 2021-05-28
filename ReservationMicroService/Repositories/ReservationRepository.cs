@@ -39,7 +39,7 @@ namespace ReservationMicroService.Repositories
 
         public async Task<IEnumerable<Reservation>> GetAllUnboughtReservationsForMovie(DateTime dateTime)
         {
-            return await FindByCondition(Reservation => Reservation.DateTime == dateTime && Reservation.IsFooled == false, false)
+            return await FindByCondition(Reservation => Reservation.DateTime == dateTime && Reservation.PaymentCode == new Guid(), false)
                 .Include(x => x.Places)
                 .ToListAsync();
         }
@@ -77,7 +77,6 @@ namespace ReservationMicroService.Repositories
                                 .Where(aplace => aplace.Row == place.Row && aplace.Site == place.Site)
                                 .Select(aplace => new { }))).Any())
                 return false;
-
             return true;
         }
 
@@ -86,9 +85,7 @@ namespace ReservationMicroService.Repositories
             var res = await FindByCondition(t => t.Telephone == telephone && t.DateTime == dateTime, false)
                 .Include(x => x.Places)
                 .SingleOrDefaultAsync();
-            if (res != null)
-                return res;
-            return null;
+            return res;
         }
 
         public async Task SaveAsync() => await context.SaveChangesAsync();

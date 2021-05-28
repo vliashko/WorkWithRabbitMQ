@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ReservationMicroService.Models
+namespace TicketMicroService.Models
 {
-    public class Reservation
+    public class Ticket
     {
         public int Id { get; set; }
-        public string Telephone { get; set; }
+        public string Email { get; set; }
         public DateTime DateTime { get; set; }
         public IEnumerable<Place> Places { get; set; }
         public Guid PaymentCode { get; set; }
 
-        public Reservation()
+        public Ticket()
         {
             Places = new List<Place>();
         }

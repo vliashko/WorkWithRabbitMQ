@@ -38,12 +38,12 @@ namespace ReservationMicroService.Services
         public async Task Consume(ConsumeContext<OrderToReservation> context)
         {
             var data = context.Message;
-            var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true);
-            if (data.Type == TypeOperation.Create)
-                Reservation.IsFooled = true;
-            else if (data.Type == TypeOperation.Delete)
-                Reservation.IsFooled = false;
-            await _repository.SaveAsync();
+            //var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true);
+            //if (data.Type == TypeOperation.Create)
+            //    Reservation.IsFooled = true;
+            //else if (data.Type == TypeOperation.Delete)
+            //    Reservation.IsFooled = false;
+            //await _repository.SaveAsync();
         }
 
         public async Task<MessageDetailsForCreateDTO> CreateReservationAsync(ReservationForCreateDTO ReservationForCreateDTO)
