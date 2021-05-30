@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MovieMicroService.Services
 {
-    public class MovieService : IMovieService, IConsumer<ReservationShared>
+    public class MovieService : IMovieService, IConsumer<ReservationShared>, IConsumer<TicketShared>
     {
         private readonly IMovieRepository _repository;
         private readonly IBus _bus;
@@ -28,6 +28,36 @@ namespace MovieMicroService.Services
         {
             var data = context.Message;
             if(data.Type == TypeOperation.Create)
+            {
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                foreach (var place in movie.Places)
+                {
+                    foreach (var item in data.Places)
+                    {
+                        if (item.Row == place.Row && item.Site == place.Site)
+                            place.IsBusy = true;
+                    }
+                }
+            }
+            else if (data.Type == TypeOperation.Delete)
+            {
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                foreach (var place in movie.Places)
+                {
+                    foreach (var item in data.Places)
+                    {
+                        if (item.Row == place.Row && item.Site == place.Site)
+                            place.IsBusy = false;
+                    }
+                }
+            }
+            await _repository.SaveAsync();
+        }
+
+        public async Task Consume(ConsumeContext<TicketShared> context)
+        {
+            var data = context.Message;
+            if (data.Type == TypeOperation.Create)
             {
                 var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
                 foreach (var place in movie.Places)
@@ -73,9 +103,15 @@ namespace MovieMicroService.Services
             await _repository.SaveAsync();
             var entityDto = _mapper.Map<MovieForReadDTO>(entity);
 
-            Uri uri = new Uri("rabbitmq://localhost/movieQueue?bind=true&queue=movieQueue");
+            Uri uri = new Uri("rabbitmq://localhost/MovieToReservationQueue?bind=true&queue=MovieToReservationQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<MovieShared>(entity);
+            objBus.Type = TypeOperation.Create;
+            await endPoint.Send(objBus);
+
+            uri = new Uri("rabbitmq://localhost/MovieToTicketQueue?bind=true&queue=MovieToTicketQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<MovieShared>(entity);
             objBus.Type = TypeOperation.Create;
             await endPoint.Send(objBus);
 

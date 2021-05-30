@@ -6,11 +6,12 @@ using OrderMicroService.Models.DataTransferObjects;
 using SharedModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OrderMicroService.Services
 {
-    public class OrderService : IOrderService
+    public class OrderService : IOrderService, IConsumer<TicketShared>, IConsumer<ReservationShared>
     {
         private readonly IOrderRepository _repository;
         private readonly IBus _bus;
@@ -23,26 +24,48 @@ namespace OrderMicroService.Services
             _mapper = mapper;
         }
 
-        public async Task<MessageDetailsForCreateDTO> CreateOrderAsync(TicketForOrderDTO orderDTO)
+        public async Task Consume(ConsumeContext<TicketShared> context)
         {
+            var data = context.Message;
+            var guid = Guid.NewGuid();
+            var entity = new Order
+            {
+                Email = data.Email,
+                DateTime = data.DateTime,
+                PurchaseDateTime = DateTime.Now,
+                TotalTickets = data.Places.Count(),
+                PaymentCode = guid
+            };
+            _repository.CreateOrder(entity);
+            await _repository.SaveAsync();
+
+            Uri uri = new Uri("rabbitmq://localhost/OrderToTicketQueue?bind=true&queue=OrderToTicketQueue");
+            var endPoint = await _bus.GetSendEndpoint(uri);
+            var objBus = _mapper.Map<OrderToTicketShared>(entity);
+            objBus.Type = TypeOperation.Create;
+            await endPoint.Send(objBus);
+        }
+
+        public async Task Consume(ConsumeContext<ReservationShared> context)
+        {
+            var data = context.Message;
+            Guid guid = Guid.NewGuid();
             var orderToCreate = new Order
             {
-                Telephone = orderDTO.Telephone,
-                DateTime = orderDTO.DateTime,
+                Telephone = data.Telephone,
+                DateTime = data.DateTime,
                 PurchaseDateTime = DateTime.Now,
-                TotalTickets = orderDTO.TicketCounts
+                TotalTickets = data.Places.Count(),
+                PaymentCode = guid
             };
             _repository.CreateOrder(orderToCreate);
             await _repository.SaveAsync();
 
-            Uri uri = new Uri("rabbitmq://localhost/orderQueue?bind=true&queue=orderQueue");
+            Uri uri = new Uri("rabbitmq://localhost/OrderToReservationQueue?bind=true&queue=OrderToReservationQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
-            var objBus = _mapper.Map<OrderToReservation>(orderDTO);
+            var objBus = _mapper.Map<OrderToReservationShared>(orderToCreate);
             objBus.Type = TypeOperation.Create;
             await endPoint.Send(objBus);
-
-            var orderDto = _mapper.Map<OrderForReadDTO>(orderToCreate);
-            return new MessageDetailsForCreateDTO { StatusCode = 201, Order = orderDto };
         }
 
         public async Task<MessageDetailsDTO> DeleteOrderAsync(int id)
@@ -53,7 +76,7 @@ namespace OrderMicroService.Services
 
             Uri uri = new Uri("rabbitmq://localhost/orderQueue?bind=true&queue=orderQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
-            var objBus = _mapper.Map<OrderToReservation>(order);
+            var objBus = _mapper.Map<OrderToReservationShared>(order);
             objBus.Type = TypeOperation.Delete;
             await endPoint.Send(objBus);
 

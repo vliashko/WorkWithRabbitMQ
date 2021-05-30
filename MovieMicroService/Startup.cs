@@ -50,7 +50,12 @@ namespace MovieMicroService
                         h.Username("guest");
                         h.Password("guest");
                     });
-                    config.ReceiveEndpoint("ReservationQueue", ep =>
+                    config.ReceiveEndpoint("ReservationToMovieQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<MovieService>(provider);
+                    });
+                    config.ReceiveEndpoint("TicketToMovieQueue", ep =>
                     {
                         ep.UseMessageRetry(r => r.Interval(100, 100));
                         ep.ConfigureConsumer<MovieService>(provider);

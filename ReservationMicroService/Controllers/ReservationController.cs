@@ -51,6 +51,13 @@ namespace ReservationMicroService.Controllers
             return StatusCode(ReservationResult.StatusCode, ReservationResult.Reservation);
         }
 
+        [HttpPost("buy")]
+        public async Task<IActionResult> BuyReservation(string telephone, DateTime dateTime)
+        {
+            var result = await _service.BuyReservationAsync(telephone, dateTime);
+            return StatusCode(result.StatusCode);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReservation(int id)
         {

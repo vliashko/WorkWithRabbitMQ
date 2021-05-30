@@ -11,7 +11,6 @@ namespace OrderMicroService.Contracts
         Task<int> GetOrdersCountAsync(OrderModelForSearchDTO searchModel);
         Task<OrderForReadDTO> GetOrderAsync(int id);
         Task<OrderForReadDTO> GetOrderByDateTimeAsync(DateTime dateTime);
-        Task<MessageDetailsForCreateDTO> CreateOrderAsync(TicketForOrderDTO orderDTO);
         Task<MessageDetailsDTO> DeleteOrderAsync(int id);
     }
 }

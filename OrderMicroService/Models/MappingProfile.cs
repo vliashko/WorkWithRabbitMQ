@@ -9,9 +9,8 @@ namespace OrderMicroService.Models
         public MappingProfile()
         {
             CreateMap<Order, OrderForReadDTO>();
-            CreateMap<TicketForOrderDTO, Order>();
-            CreateMap<TicketForOrderDTO, OrderToReservation>();
-            CreateMap<Order, OrderToReservation>();
+            CreateMap<Order, OrderToReservationShared>();
+            CreateMap<Order, OrderToTicketShared>();
         }
     }
 }

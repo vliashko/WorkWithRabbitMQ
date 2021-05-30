@@ -11,5 +11,6 @@ namespace ReservationMicroService.Models
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Place> Places { get; set; }
         public DbSet<Movie> Movies { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
     }
 }

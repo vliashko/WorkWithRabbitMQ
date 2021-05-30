@@ -10,17 +10,21 @@ using System.Threading.Tasks;
 
 namespace ReservationMicroService.Services
 {
-    public class ReservationService : IReservationService, IConsumer<MovieShared>, IConsumer<OrderToReservation>
+    public class ReservationService : IReservationService, IConsumer<MovieShared>, IConsumer<OrderToReservationShared>, IConsumer<TicketShared>
     {
         private readonly IReservationRepository _repository;
         private readonly IMovieRepository _movieRepository;
+        private readonly ITicketRepository _ticketRepository;
         private readonly IBus _bus;
         private readonly IMapper _mapper;
 
-        public ReservationService(IReservationRepository repository, IMovieRepository movieRepository, IBus bus, IMapper mapper)
+        public ReservationService(IReservationRepository repository, 
+            IMovieRepository movieRepository, IBus bus, 
+            IMapper mapper, ITicketRepository ticketRepository)
         {
             _repository = repository;
             _movieRepository = movieRepository;
+            _ticketRepository = ticketRepository;
             _bus = bus;
             _mapper = mapper;
         }
@@ -35,15 +39,44 @@ namespace ReservationMicroService.Services
             }
         }
 
-        public async Task Consume(ConsumeContext<OrderToReservation> context)
+        public async Task Consume(ConsumeContext<OrderToReservationShared> context)
         {
             var data = context.Message;
-            //var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true);
-            //if (data.Type == TypeOperation.Create)
-            //    Reservation.IsFooled = true;
-            //else if (data.Type == TypeOperation.Delete)
-            //    Reservation.IsFooled = false;
-            //await _repository.SaveAsync();
+            var Reservation = await _repository.GetReservationByDateTimeAndTel(data.DateTime, data.Telephone, true);
+            if (data.Type == TypeOperation.Create)
+                Reservation.PaymentCode = data.PaymentCode;
+            else if (data.Type == TypeOperation.Delete)
+                Reservation.PaymentCode = new Guid();
+            await _repository.SaveAsync();
+        }
+
+        public async Task Consume(ConsumeContext<TicketShared> context)
+        {
+            var data = context.Message;
+            if(data.Type == TypeOperation.Create)
+            {
+                _ticketRepository.AddTicket(_mapper.Map<Ticket>(data));
+            }
+            else if(data.Type == TypeOperation.Delete)
+            {
+                _ticketRepository.DeleteTicket(_mapper.Map<Ticket>(data));
+            }
+            await _ticketRepository.SaveAsync();
+        }
+
+        public async Task<MessageDetailsDTO> BuyReservationAsync(string telephone, DateTime dateTime)
+        {
+            var entity = await _repository.GetReservationByDateTimeAndTel(dateTime, telephone, false);
+            if (entity == null)
+                return new MessageDetailsDTO { StatusCode = 404 };
+
+            Uri uri = new Uri("rabbitmq://localhost/ReservationToOrderQueue?bind=true&queue=ReservationToOrderQueue");
+            var endPoint = await _bus.GetSendEndpoint(uri);
+            var objBus = _mapper.Map<ReservationShared>(entity);
+            objBus.Type = TypeOperation.Create;
+            await endPoint.Send(objBus);
+
+            return new MessageDetailsDTO { StatusCode = 200 };
         }
 
         public async Task<MessageDetailsForCreateDTO> CreateReservationAsync(ReservationForCreateDTO ReservationForCreateDTO)
@@ -65,13 +98,22 @@ namespace ReservationMicroService.Services
             var canBeCreated = await _repository.IsPlacesFree(entity.DateTime, entity.Places, 0);
             if (!canBeCreated)
                 return new MessageDetailsForCreateDTO { StatusCode = 400, Reservation = null };
+            canBeCreated = await _ticketRepository.IsPlacesFree(entity.DateTime, entity.Places);
+            if (!canBeCreated)
+                return new MessageDetailsForCreateDTO { StatusCode = 400, Reservation = null };
             _repository.CreateReservation(entity);
             await _repository.SaveAsync();
             var entityDto = _mapper.Map<ReservationForReadDTO>(entity);
 
-            Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+            Uri uri = new Uri("rabbitmq://localhost/ReservationToMovieQueue?bind=true&queue=ReservationToMovieQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<ReservationShared>(entity);
+            objBus.Type = TypeOperation.Create;
+            await endPoint.Send(objBus);
+
+            uri = new Uri("rabbitmq://localhost/ReservationToTicketQueue?bind=true&queue=ReservationToTicketQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<ReservationShared>(entity);
             objBus.Type = TypeOperation.Create;
             await endPoint.Send(objBus);
 
@@ -83,11 +125,18 @@ namespace ReservationMicroService.Services
             var Reservations = await _repository.GetAllUnboughtReservationsForMovie(dateTime);
             foreach (var Reservation in Reservations)
             {
-                Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+                Uri uri = new Uri("rabbitmq://localhost/ReservationToMovieQueue?bind=true&queue=ReservationToMovieQueue");
                 var endPoint = await _bus.GetSendEndpoint(uri);
                 var objBus = _mapper.Map<ReservationShared>(Reservation);
                 objBus.Type = TypeOperation.Delete;
                 await endPoint.Send(objBus);
+
+                uri = new Uri("rabbitmq://localhost/ReservationToTicketQueue?bind=true&queue=ReservationToTicketQueue");
+                endPoint = await _bus.GetSendEndpoint(uri);
+                objBus = _mapper.Map<ReservationShared>(Reservation);
+                objBus.Type = TypeOperation.Delete;
+                await endPoint.Send(objBus);
+
                 _repository.DeleteReservation(Reservation);
             }
             await _repository.SaveAsync();
@@ -100,9 +149,18 @@ namespace ReservationMicroService.Services
             if (Reservation == null)
                 return new MessageDetailsDTO { StatusCode = 404, Message = $"Reservation with id: {id} doesn't exist in the database" };
 
-            Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+            if (Reservation.PaymentCode != new Guid())
+                return new MessageDetailsDTO { StatusCode = 400, Message = "Cannot delete paid reservation." };
+
+            Uri uri = new Uri("rabbitmq://localhost/ReservationToMovieQueue?bind=true&queue=ReservationToMovieQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<ReservationShared>(Reservation);
+            objBus.Type = TypeOperation.Delete;
+            await endPoint.Send(objBus);
+
+            uri = new Uri("rabbitmq://localhost/ReservationToTicketQueue?bind=true&queue=ReservationToTicketQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<ReservationShared>(Reservation);
             objBus.Type = TypeOperation.Delete;
             await endPoint.Send(objBus);
 
@@ -143,16 +201,28 @@ namespace ReservationMicroService.Services
             if (!isPlacesFree)
                 return new MessageDetailsDTO { StatusCode = 400, Message = $"Reservation cannot be change. These seats have already been purchased / booked." };
 
-            Uri uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+            Uri uri = new Uri("rabbitmq://localhost/ReservationToMovieQueue?bind=true&queue=ReservationToMovieQueue");
             var endPoint = await _bus.GetSendEndpoint(uri);
             var objBus = _mapper.Map<ReservationShared>(Reservation);
             objBus.Type = TypeOperation.Delete;
             await endPoint.Send(objBus);
 
+            uri = new Uri("rabbitmq://localhost/ReservationToTicketQueue?bind=true&queue=ReservationToTicketQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<ReservationShared>(Reservation);
+            objBus.Type = TypeOperation.Delete;
+            await endPoint.Send(objBus);
+
             _mapper.Map(ReservationForUpdateDTO, Reservation);
             await _repository.SaveAsync();
+            
+            uri = new Uri("rabbitmq://localhost/ReservationToMovieQueue?bind=true&queue=ReservationToMovieQueue");
+            endPoint = await _bus.GetSendEndpoint(uri);
+            objBus = _mapper.Map<ReservationShared>(Reservation);
+            objBus.Type = TypeOperation.Create;
+            await endPoint.Send(objBus);
 
-            uri = new Uri("rabbitmq://localhost/ReservationQueue?bind=true&queue=ReservationQueue");
+            uri = new Uri("rabbitmq://localhost/ReservationToTicketQueue?bind=true&queue=ReservationToTicketQueue");
             endPoint = await _bus.GetSendEndpoint(uri);
             objBus = _mapper.Map<ReservationShared>(Reservation);
             objBus.Type = TypeOperation.Create;

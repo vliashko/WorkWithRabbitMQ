@@ -27,6 +27,7 @@ namespace ReservationMicroService
         {
             services.AddScoped<IReservationRepository, ReservationRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IReservationService, ReservationService>();
 
             services.AddDbContext<RepositoryDbContext>(options =>
@@ -45,12 +46,17 @@ namespace ReservationMicroService
                         h.Username("guest");
                         h.Password("guest");
                     });
-                    config.ReceiveEndpoint("movieQueue", ep =>
+                    config.ReceiveEndpoint("MovieToReservationQueue", ep =>
                     {
                         ep.UseMessageRetry(r => r.Interval(100, 100));
                         ep.ConfigureConsumer<ReservationService>(provider);
                     });
-                    config.ReceiveEndpoint("orderQueue", ep =>
+                    config.ReceiveEndpoint("TicketToReservationQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<ReservationService>(provider);
+                    });
+                    config.ReceiveEndpoint("OrderToReservationQueue", ep =>
                     {
                         ep.UseMessageRetry(r => r.Interval(100, 100));
                         ep.ConfigureConsumer<ReservationService>(provider);

@@ -6,6 +6,5 @@ namespace ReservationMicroService.Models
         public int Id { get; set; }
         public int Row { get; set; }
         public int Site { get; set; }
-        public int ReservationId { get; set; }
     }
 }

@@ -14,7 +14,8 @@ namespace ReservationMicroService.Models
 
             CreateMap<Movie, MovieShared>().ReverseMap();
             CreateMap<Place, PlaceShared>().ReverseMap();
-            CreateMap<Reservation, ReservationShared>().ForMember(x => x.Places, c => c.MapFrom(x => x.Places)).ReverseMap();
+            CreateMap<Ticket, TicketShared>().ReverseMap();
+            CreateMap<Reservation, ReservationShared>().ReverseMap();
         }
     }
 }

@@ -26,6 +26,7 @@ namespace TicketMicroService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<ITicketRepository, TicketRepository>();
+            services.AddScoped<IReservationRepository, ReservationRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<ITicketService, TicketService>();
 
@@ -36,6 +37,7 @@ namespace TicketMicroService
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<TicketService>();
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(config =>
                 {
                     config.UseHealthCheck(provider);
@@ -44,7 +46,17 @@ namespace TicketMicroService
                         h.Username("guest");
                         h.Password("guest");
                     });
-                    config.ReceiveEndpoint("movieQueue", ep =>
+                    config.ReceiveEndpoint("MovieToTicketQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<TicketService>(provider);
+                    });
+                    config.ReceiveEndpoint("ReservationToTicketQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<TicketService>(provider);
+                    });
+                    config.ReceiveEndpoint("OrderToTicketQueue", ep =>
                     {
                         ep.UseMessageRetry(r => r.Interval(100, 100));
                         ep.ConfigureConsumer<TicketService>(provider);

@@ -38,15 +38,6 @@ namespace OrderMicroService.Controllers
             return Ok(ticket);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateOrder(TicketForOrderDTO ticket)
-        {
-            if (ticket == null)
-                return BadRequest();
-            var orderResult = await _service.CreateOrderAsync(ticket);
-            return StatusCode(orderResult.StatusCode, orderResult.Order);
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {

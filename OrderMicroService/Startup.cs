@@ -35,6 +35,7 @@ namespace OrderMicroService
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<OrderService>();
                 x.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(config =>
                 {
                     config.UseHealthCheck(provider);
@@ -42,6 +43,16 @@ namespace OrderMicroService
                     {
                         h.Username("guest");
                         h.Password("guest");
+                    });
+                    config.ReceiveEndpoint("TicketToOrderQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<OrderService>(provider);
+                    });
+                    config.ReceiveEndpoint("ReservationToOrderQueue", ep =>
+                    {
+                        ep.UseMessageRetry(r => r.Interval(100, 100));
+                        ep.ConfigureConsumer<OrderService>(provider);
                     });
                 }));
             });
