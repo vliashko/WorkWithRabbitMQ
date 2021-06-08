@@ -1,4 +1,5 @@
-﻿using MovieMicroService.Models.DataTransferObjects;
+﻿using MongoDB.Bson;
+using MovieMicroService.Models.DataTransferObjects;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,9 +8,9 @@ namespace MovieMicroService.Contracts
     public interface IMovieService
     {
         Task<IEnumerable<MovieForReadDTO>> GetMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel);
-        Task<int> GetMoviesCountAsync(MovieModelForSearchDTO searchModel);
-        Task<MovieForReadDTO> GetMovieAsync(int id);
+        Task<long> GetMoviesCountAsync(MovieModelForSearchDTO searchModel);
+        Task<MovieForReadDTO> GetMovieAsync(ObjectId id);
         Task<MessageDetailsForCreateDTO> CreateMovieAsync(MovieForCreateDTO movieForCreateDTO);
-        Task<MessageDetailsDTO> UpdateMovieAsync(int id, MovieForUpdateDTO movieForUpdateDTO);
+        Task<MessageDetailsDTO> UpdateMovieAsync(ObjectId id, MovieForUpdateDTO movieForUpdateDTO);
     }
 }

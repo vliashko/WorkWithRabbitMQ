@@ -2,21 +2,15 @@ using GreenPipes;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using MovieMicroService.Contracts;
 using MovieMicroService.Models;
 using MovieMicroService.Repositories;
 using MovieMicroService.Services;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MovieMicroService
 {
@@ -34,8 +28,7 @@ namespace MovieMicroService
             services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<IMovieService, MovieService>();
 
-            services.AddDbContext<RepositoryDbContext>(options =>
-                            options.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
+            services.AddSingleton<IMongoClient, MongoClient>(f => new MongoClient(Configuration.GetConnectionString("mongoConnection")));
 
             services.AddAutoMapper(typeof(MappingProfile));
 

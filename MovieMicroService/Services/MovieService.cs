@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MassTransit;
+using MongoDB.Bson;
 using MovieMicroService.Contracts;
 using MovieMicroService.Models;
 using MovieMicroService.Models.DataTransferObjects;
@@ -29,7 +30,7 @@ namespace MovieMicroService.Services
             var data = context.Message;
             if(data.Type == TypeOperation.Create)
             {
-                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime);
                 foreach (var place in movie.Places)
                 {
                     foreach (var item in data.Places)
@@ -41,7 +42,7 @@ namespace MovieMicroService.Services
             }
             else if (data.Type == TypeOperation.Delete)
             {
-                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime);
                 foreach (var place in movie.Places)
                 {
                     foreach (var item in data.Places)
@@ -51,7 +52,6 @@ namespace MovieMicroService.Services
                     }
                 }
             }
-            await _repository.SaveAsync();
         }
 
         public async Task Consume(ConsumeContext<TicketShared> context)
@@ -59,7 +59,7 @@ namespace MovieMicroService.Services
             var data = context.Message;
             if (data.Type == TypeOperation.Create)
             {
-                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime);
                 foreach (var place in movie.Places)
                 {
                     foreach (var item in data.Places)
@@ -71,7 +71,7 @@ namespace MovieMicroService.Services
             }
             else if (data.Type == TypeOperation.Delete)
             {
-                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime, true);
+                var movie = await _repository.GetMovieByDateTimeAsync(data.DateTime);
                 foreach (var place in movie.Places)
                 {
                     foreach (var item in data.Places)
@@ -81,7 +81,6 @@ namespace MovieMicroService.Services
                     }
                 }
             }
-            await _repository.SaveAsync();
         }
 
         public async Task<MessageDetailsForCreateDTO> CreateMovieAsync(MovieForCreateDTO movieForCreateDTO)
@@ -100,7 +99,6 @@ namespace MovieMicroService.Services
             }
 
             _repository.CreateMovie(entity);
-            await _repository.SaveAsync();
             var entityDto = _mapper.Map<MovieForReadDTO>(entity);
 
             Uri uri = new Uri("rabbitmq://localhost/MovieToReservationQueue?bind=true&queue=MovieToReservationQueue");
@@ -118,29 +116,29 @@ namespace MovieMicroService.Services
             return new MessageDetailsForCreateDTO { StatusCode = 201, Movie = entityDto };
         }
 
-        public async Task<MovieForReadDTO> GetMovieAsync(int id)
+        public async Task<MovieForReadDTO> GetMovieAsync(ObjectId id)
         {
-            var movie = await _repository.GetMovieAsync(id, false);
+            var movie = await _repository.GetMovieAsync(id);
             if (movie == null)
                 return null;
             return _mapper.Map<MovieForReadDTO>(movie);
         }
 
-        public async Task<int> GetMoviesCountAsync(MovieModelForSearchDTO searchModel)
+        public async Task<long> GetMoviesCountAsync(MovieModelForSearchDTO searchModel)
         {
-            var count = await _repository.GetMoviesCountAsync(searchModel, false);
+            var count = await _repository.GetMoviesCountAsync(searchModel);
             return count;
         }
 
         public async Task<IEnumerable<MovieForReadDTO>> GetMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel)
         {
-            var movies = await _repository.GetAllMoviesPaginationAsync(pageIndex, pageSize, searchModel, false);
+            var movies = await _repository.GetAllMoviesPaginationAsync(pageIndex, pageSize, searchModel);
             return _mapper.Map<IEnumerable<MovieForReadDTO>>(movies);
         }
 
-        public async Task<MessageDetailsDTO> UpdateMovieAsync(int id, MovieForUpdateDTO movieForUpdateDTO)
+        public async Task<MessageDetailsDTO> UpdateMovieAsync(ObjectId id, MovieForUpdateDTO movieForUpdateDTO)
         {
-            var movie = await _repository.GetMovieAsync(id, true);
+            var movie = await _repository.GetMovieAsync(id);
             if (movie == null)
                 return new MessageDetailsDTO { StatusCode = 404 };
             if (string.IsNullOrWhiteSpace(movieForUpdateDTO.Name))
@@ -158,7 +156,6 @@ namespace MovieMicroService.Services
                     }
                 }
             }
-            await _repository.SaveAsync();
 
             return new MessageDetailsDTO { StatusCode = 204 };
         }

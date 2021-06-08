@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using MovieMicroService.Contracts;
 using MovieMicroService.Models.DataTransferObjects;
 using MovieMicroService.Models.Pagination;
@@ -30,9 +31,9 @@ namespace MovieMicroService.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetMovie(int id)
+        public async Task<IActionResult> GetMovie(string id)
         {
-            var movie = await _service.GetMovieAsync(id);
+            var movie = await _service.GetMovieAsync(new ObjectId(id));
             if (movie == null)
                 return NotFound();
             return Ok(movie);
@@ -50,11 +51,11 @@ namespace MovieMicroService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTicket(int id, MovieForUpdateDTO movieDto)
+        public async Task<IActionResult> UpdateTicket(string id, MovieForUpdateDTO movieDto)
         {
             if (movieDto == null)
                 return BadRequest();
-            var result = await _service.UpdateMovieAsync(id, movieDto);
+            var result = await _service.UpdateMovieAsync(new ObjectId(id), movieDto);
             return StatusCode(result.StatusCode, result.Message);
         }
     }

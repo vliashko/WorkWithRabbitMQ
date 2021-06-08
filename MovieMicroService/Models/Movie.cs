@@ -1,11 +1,12 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 
 namespace MovieMicroService.Models
 {
     public class Movie
     {
-        public int Id { get; set; }
+        public ObjectId Id { get; set; }
         public string Name { get; set; }
         public DateTime StartMovie { get; set; }
         public DateTime EndMovie { get; set; }

@@ -1,4 +1,5 @@
-﻿using MovieMicroService.Models;
+﻿using MongoDB.Bson;
+using MovieMicroService.Models;
 using MovieMicroService.Models.DataTransferObjects;
 using System;
 using System.Collections.Generic;
@@ -8,12 +9,11 @@ namespace MovieMicroService.Contracts
 {
     public interface IMovieRepository
     {
-        Task<IEnumerable<Movie>> GetAllMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel, bool trackChanges);
-        Task<int> GetMoviesCountAsync(MovieModelForSearchDTO searchModel, bool trackChanges);
+        Task<IEnumerable<Movie>> GetAllMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel);
+        Task<long> GetMoviesCountAsync(MovieModelForSearchDTO searchModel);
         Task<bool> IsTimeValid(DateTime start, DateTime end);
-        Task<Movie> GetMovieAsync(int movieId, bool trackChanges);
-        Task<Movie> GetMovieByDateTimeAsync(DateTime dateTime, bool trackChanges);
+        Task<Movie> GetMovieAsync(ObjectId movieId);
+        Task<Movie> GetMovieByDateTimeAsync(DateTime dateTime);
         void CreateMovie(Movie movie);
-        Task SaveAsync();
     }
 }

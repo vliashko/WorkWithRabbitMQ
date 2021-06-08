@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using MovieMicroService.Contracts;
 using MovieMicroService.Models;
 using MovieMicroService.Models.DataTransferObjects;
@@ -9,64 +10,64 @@ using System.Threading.Tasks;
 
 namespace MovieMicroService.Repositories
 {
-    public class MovieRepository : RepositoryBase<Movie>, IMovieRepository
+    public class MovieRepository : IMovieRepository
     {
-        public MovieRepository(RepositoryDbContext context): base(context)
-        {   
+        private readonly IMongoCollection<Movie> _movies;
+
+        public MovieRepository(IMongoClient client)
+        {
+            var database = client.GetDatabase("movies");
+            var collection = database.GetCollection<Movie>(nameof(Movie));
+            _movies = collection;
         }
+
 
         public void CreateMovie(Movie movie)
         {
-            Create(movie);
+            _movies.InsertOneAsync(movie);
         }
 
-        public async Task<IEnumerable<Movie>> GetAllMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel, bool trackChanges)
+        public async Task<IEnumerable<Movie>> GetAllMoviesPaginationAsync(int pageIndex, int pageSize, MovieModelForSearchDTO searchModel)
         {
-            return await FindByCondition(movie =>
+            var movies = await _movies.Find(movie => 
                 (string.IsNullOrWhiteSpace(searchModel.Name) || movie.Name.Contains(searchModel.Name)) &&
-                (searchModel.StartMovie == new DateTime() || searchModel.StartMovie == movie.StartMovie), trackChanges)
+                (searchModel.StartMovie == new DateTime() || searchModel.StartMovie == movie.StartMovie))
                 .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
+                .Limit(pageSize)
                 .ToListAsync();
+            return movies;
         }
 
-        public async Task<Movie> GetMovieAsync(int movieId, bool trackChanges)
+        public async Task<Movie> GetMovieAsync(ObjectId movieId)
         {
-            return await FindByCondition(movie => movie.Id == movieId, trackChanges)
-                .Include(movie => movie.Places)
-                .SingleOrDefaultAsync();
+            var movie = await _movies.Find(movie => movie.Id == movieId)
+                .FirstOrDefaultAsync();
+            return movie;
         }
 
-        public async Task<Movie> GetMovieByDateTimeAsync(DateTime dateTime, bool trackChanges)
+        public async Task<Movie> GetMovieByDateTimeAsync(DateTime dateTime)
         {
-            return await FindByCondition(movie => movie.StartMovie == dateTime, trackChanges)
-                .Include(x => x.Places)
-                .SingleOrDefaultAsync();
+            var movie = await _movies.Find(movie => movie.StartMovie == dateTime)
+                .FirstOrDefaultAsync();
+            return movie;
         }
 
-        public async Task<int> GetMoviesCountAsync(MovieModelForSearchDTO searchModel, bool trackChanges)
+        public async Task<long> GetMoviesCountAsync(MovieModelForSearchDTO searchModel)
         {
-            return await FindByCondition(movie =>
+            var count = await _movies.Find(movie =>
                 (string.IsNullOrWhiteSpace(searchModel.Name) || movie.Name.Contains(searchModel.Name)) &&
-                (searchModel.StartMovie == new DateTime() || searchModel.StartMovie == movie.StartMovie), trackChanges)
-                .CountAsync();
+                (searchModel.StartMovie == new DateTime() || searchModel.StartMovie == movie.StartMovie))
+                .CountDocumentsAsync();
+            return count;
         }
 
         public async Task<bool> IsTimeValid(DateTime start, DateTime end)
         {
-            var movies = await FindByCondition(movie => (movie.StartMovie.Date == start.Date || movie.StartMovie.Date == end.Date) &&
-                (movie.EndMovie.Date == start.Date || movie.EndMovie.Date == end.Date), false)
-                .ToListAsync();
-            foreach (var movie in movies)
-            {
-                if ((movie.StartMovie <= start && movie.EndMovie >= start) || (movie.StartMovie <= end && movie.EndMovie >= end))
-                    return false;
-                if ((movie.StartMovie > start && movie.StartMovie < end) || (movie.EndMovie > start && movie.EndMovie < end))
-                    return false;
-            }
+            if ((await _movies.Find(movie => (movie.StartMovie <= start && movie.EndMovie >= start) || (movie.StartMovie <= end && movie.EndMovie >= end) &&
+                 (movie.StartMovie > start && movie.StartMovie < end) || (movie.EndMovie > start && movie.EndMovie < end))
+                .ToListAsync()).Any())
+                return false;
             return true;
         }
-
-        public async Task SaveAsync() => await context.SaveChangesAsync();
     }
 }
